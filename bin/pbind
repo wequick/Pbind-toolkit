@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
+require 'pbind'
+
+ENV['PBIND_SOURCE'] = File.expand_path('../../source', __FILE__)
+
+if profile_filename = ENV['PROFILE']
+  require 'ruby-prof'
+  reporter =
+    case (profile_extname = File.extname(profile_filename))
+    when '.txt'
+      RubyProf::FlatPrinterWithLineNumbers
+    when '.html'
+      RubyProf::GraphHtmlPrinter
+    when '.callgrind'
+      RubyProf::CallTreePrinter
+    else
+      raise "Unknown profiler format indicated by extension: #{profile_extname}"
+    end
+  File.open(profile_filename, 'w') do |io|
+    reporter.new(RubyProf.profile { Pbind::Command.run(ARGV) }).print(io)
+  end
+else
+  Pbind::Command.run(ARGV)
+end
