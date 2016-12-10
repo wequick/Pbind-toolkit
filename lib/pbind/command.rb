@@ -5,6 +5,7 @@ module Pbind
   class Command < CLAide::Command
 
     require_relative 'command/watch'
+    require_relative 'command/mock'
 
     self.abstract_command = true
     self.command = 'pbind'
