@@ -5,30 +5,25 @@ require 'fileutils'
 module Pbind
   class Command
     class Mock < Command
-      self.summary = 'Add mock JSON file at PBLocalhost'
+      self.summary = 'Enable JSON mocking feature for Pbind.'
       self.description = <<-DESC
-        Create [CLIENT]/[ACTION].json under PBLocalhost directory for the [XCODEPROJ]. 
+        Create `CLIENT`/`ACTION`.json under PBLocalhost directory for the XCODEPROJ. 
       DESC
 
       self.arguments = [
-        CLAide::Argument.new(['CLIENT', 'ACTION', 'XCODEPROJ'], true),
+        CLAide::Argument.new(%(CLIENT ACTION), true),
       ]
 
       def initialize(argv)
+        super
         @client = argv.shift_argument
         @action = argv.shift_argument
-        @project_path = argv.shift_argument
       end
 
       def validate!
-        # super
+        verify_project_exists
         help! 'The client is required.' unless @client
         help! 'The action is required.' unless @action
-
-        help! 'A path for the xcodeproj is required.' unless @project_path
-        @project_path = @project_path.chomp('/')
-        help! 'The xcodeproj path should ends with ".xcodeproj"' unless @project_path.end_with?('.xcodeproj')
-        help! "The xcodeproj path '#{@project_path}' is not exists." unless File.exists?(@project_path) 
       end
 
       def run

@@ -5,33 +5,28 @@ require 'fileutils'
 module Pbind
   class Command
     class Watch < Command
-      self.summary = 'Enable Pbind can watch sources and apply instant changes at runtime.'
+      self.abstract_command = false
+      self.summary = 'Enable the live load feature for Pbind.'
       self.description = <<-DESC
-        1. Download `PBPlayground` sources from GitHub, create a new group named `PBPlayground` and add it to the current project.
+        Downloads all dependencies of `PBLiveLoader` for the Xcode project.
 
-        2. Modify the project `Info.plist` and set `PBResourcesPath` to `$(SRCROOT)/[project_name]`, `PBLocalhost` to `$(SRCROOT)/PBLocalhost`.
+        The Xcode project file should be specified in `--project` like this:
 
-        3. At runtime: `[PBPlayground load]` observe the application lifecycle and watch the above paths to apply instant changes. 
+            --project=path/to/Project.xcodeproj
+
+        If no project is specified, then a search for an Xcode project will be made. If
+        more than one Xcode project is found, the command will raise an error.
+
+        This will configure the project to reference the Pbind LiveLoader library
+        and add a PBLocalhost directory for later JSON mocking. 
       DESC
 
-      self.arguments = [
-        CLAide::Argument.new('XCODEPROJ', true),
-      ]
-
-      def initialize(argv)
-        @project_path = argv.shift_argument
-      end
-
       def validate!
-        # super
-        help! 'A path for the xcodeproj is required.' unless @project_path
-        @project_path = @project_path.chomp('/')
-        help! 'The xcodeproj path should ends with ".xcodeproj"' unless @project_path.end_with?('.xcodeproj')
-        help! "The xcodeproj path '#{@project_path}' is not exists." unless File.exists?(@project_path) 
+        verify_project_exists
       end
 
       def run
-        @src_name = 'PBPlayground'
+        @src_name = 'PBLiveLoader'
         @api_name = 'PBLocalhost'
         @src_key = 'PBResourcesPath'
         @project_root = File.dirname(@project_path)
@@ -55,7 +50,7 @@ module Pbind
 
       # !@group Private helpers
 
-      # Install the `PBPlayground`, `PBLocalhost` sources
+      # Install the `PBLiveLoader`, `PBLocalhost` sources
       #
       # @return [void]
       #
@@ -65,7 +60,7 @@ module Pbind
         end
 
         source_dir = ENV['PBIND_SOURCE']
-        UI.section("Copying `#{source_dir}` into `#{@project_root}`.") do
+        UI.section("Copying [`#{@src_name}`, `#{@api_name}`] into `#{@project_root}`.") do
           FileUtils.cp_r File.join(source_dir, @src_name), @project_root
           FileUtils.cp_r File.join(source_dir, @api_name), @project_root
           @changed = true
@@ -113,7 +108,7 @@ module Pbind
         end
       end
 
-      # Add `PBPlayground`, `PBLocalhost` group references to the project
+      # Add `PBLiveLoader`, `PBLocalhost` group references to the project
       #
       # @return [Bool] something changed
       #
@@ -122,7 +117,7 @@ module Pbind
         target = project.targets.first
         changed = false
 
-        # Add PBPlayground group
+        # Add PBLiveLoader group
         group = project.main_group.find_subpath(@src_name, true)
         if group.empty?
           group.set_source_tree('SOURCE_ROOT')
