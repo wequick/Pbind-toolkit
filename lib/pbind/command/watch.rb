@@ -39,9 +39,7 @@ module Pbind
         add_plist_entries
         add_group_references
 
-        if !@changed
-          puts 'All are UP-TO-DATE.'
-        end
+        super
       end
 
       private

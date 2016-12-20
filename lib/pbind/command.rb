@@ -1,6 +1,9 @@
 require 'colored'
 require 'claide'
 
+require 'cocoapods/config'
+require 'cocoapods/user_interface'
+
 module Pbind
   class Command < CLAide::Command
 
@@ -13,17 +16,18 @@ module Pbind
     self.description = 'Pbind, the Pbind XcodeProject Helper.'
     self.plugin_prefixes = %w(claide pbind)
 
+    UI = Pod::UI
+
     def self.report_error(exception)
       case exception
       when Interrupt
         puts ''
         puts '[!] Cancelled'.red
-        # Config.instance.verbose? ? raise : exit(1)
       when SystemExit
         raise
       else
         # if ENV['PBIND_ENV'] != 'development'
-          # puts UI::ErrorReport.report(exception)
+        #   puts UI::ErrorReport.report(exception)
         #   UI::ErrorReport.search_for_exceptions(exception)
         #   exit 1
         # else
@@ -42,6 +46,12 @@ module Pbind
       super
 
       @project_path = argv.option('project')
+    end
+
+    def run
+      if !@changed
+        UI.notice 'All are UP-TO-DATE.'
+      end
     end
 
     def verify_project_exists

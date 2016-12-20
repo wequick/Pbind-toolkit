@@ -35,9 +35,7 @@ module Pbind
 
         add_mock_json
 
-        if !@changed
-          puts 'All are UP-TO-DATE.'
-        end
+        super
       end
 
       private
