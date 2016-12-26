@@ -135,7 +135,7 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
         
         NSString *method = request.method;
         if (method != nil && ![method isEqualToString:@"GET"]) {
-            action = [action stringByAppendingFormat:@".%@", [method lowercaseString]];
+            action = [action stringByAppendingFormat:@"@%@", [method lowercaseString]];
         }
         action = [action stringByReplacingOccurrencesOfString:@"/" withString:@"-"];
         if (kIgnoreAPIs != nil && [kIgnoreAPIs containsObject:action]) {
