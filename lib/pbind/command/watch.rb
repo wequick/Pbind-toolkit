@@ -152,7 +152,7 @@ module Pbind
           return
         end
 
-        UI.section("Add plist entires to `#{@project_path}`") do
+        UI.section("Adding plist entires to `#{@project_path}`") do
           Xcodeproj::Plist.write_to_path(plist, info_plist_path)
           @changed = true
         end
@@ -200,7 +200,7 @@ module Pbind
           return
         end
 
-        UI.section("Add group [`#{@src_name}`, `#{@api_name}`] to `#{@project_path}`") do
+        UI.section("Adding group references to `#{@project_path}`") do
           project.save
           @changed = true
         end
