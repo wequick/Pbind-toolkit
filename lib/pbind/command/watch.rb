@@ -54,18 +54,65 @@ module Pbind
       #
       def install_sources
         source_dir = ENV['PBIND_SOURCE']
+        src_dir = File.join(source_dir, @src_name)
 
         if !File.exists?(@src_install_dir)
           UI.section("Copying `#{@src_name}` into `#{@project_root}`") do
-            FileUtils.cp_r File.join(source_dir, @src_name), @project_root
+            FileUtils.cp_r src_dir, @project_root
             @changed = true
+          end
+        else
+          # Check for upgrade.
+          Dir.foreach(@src_install_dir) do |filename|
+            if File.directory?(filename)
+              next
+            end
+
+            src_file = File.join(src_dir, filename)
+            if !File.exists?(src_file)
+              next
+            end
+            
+            dst_file = File.join(@src_install_dir, filename)
+            src_md5 = Digest::MD5.hexdigest( File.open(src_file, "rb"){|fs| fs.read} )
+            dst_md5 = Digest::MD5.hexdigest( File.open(dst_file, "rb"){|fs| fs.read} )
+            if src_md5 != dst_md5
+              UI.section("Upgrading `#{@src_name}/#{filename}`") do
+                FileUtils.cp src_file, dst_file
+                @changed = true
+              end
+            end
           end
         end
 
+        src_dir = File.join(source_dir, @api_name)
+
         if !File.exists?(@api_install_dir)
           UI.section("Copying `#{@api_name}` into `#{@project_root}`") do
-            FileUtils.cp_r File.join(source_dir, @api_name), @project_root
+            FileUtils.cp_r src_dir, @project_root
             @changed = true
+          end
+        else
+          # Check for upgrade.
+          Dir.foreach(@api_install_dir) do |filename|
+            if File.directory?(filename)
+              next
+            end
+
+            src_file = File.join(src_dir, filename)
+            if !File.exists?(src_file)
+              next
+            end
+
+            dst_file = File.join(@api_install_dir, filename)
+            src_md5 = Digest::MD5.hexdigest(File.open(src_file, "rb"){|fs| fs.read} )
+            dst_md5 = Digest::MD5.hexdigest(File.open(dst_file, "rb"){|fs| fs.read} )
+            if src_md5 != dst_md5
+              UI.section("Upgrading `#{@api_name}/#{filename}`") do
+                FileUtils.cp src_file, dst_file
+                @changed = true
+              end
+            end
           end
         end
       end

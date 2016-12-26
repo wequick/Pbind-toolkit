@@ -83,7 +83,7 @@ module Pbind
         if !File.exists?(json_path)
           UI.section("Creating file `#{json_relative_path}`") do
             json_file = File.new(json_path, 'w')
-            json_file.puts("{\n  \n}")
+            json_file.print("{\n  \n}")
             changed = true
           end
         end
