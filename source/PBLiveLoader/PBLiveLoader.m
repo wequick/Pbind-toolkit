@@ -18,6 +18,9 @@ static NSString *const PLIST_SUFFIX = @".plist";
 static NSString *const JSON_SUFFIX = @".json";
 static NSString *const IGNORES_SUFFIX = @"ignore.h";
 
+static NSString *const kDebugJSONRedirectKey = @"$redirect";
+static NSString *const kDebugJSONStatusKey = @"$status";
+
 static NSArray<NSString *> *kIgnoreAPIs;
 static PBDirectoryWatcher  *kResWatcher;
 static PBDirectoryWatcher  *kAPIWatcher;
@@ -45,12 +48,12 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
 + (void)watchPlist {
     NSString *resPath = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"PBResourcesPath"];
     if (resPath == nil) {
-        NSLog(@"PBPlayground: Please define PBResourcesPath in Info.plist with value '$(SRCROOT)/[path-to-resources]'!");
+        NSLog(@"PBLiveLoader: Please define PBResourcesPath in Info.plist with value '$(SRCROOT)/[path-to-resources]'!");
         return;
     }
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:resPath]) {
-        NSLog(@"PBPlayground: PBResourcesPath is not exists! (%@)", resPath);
+        NSLog(@"PBLiveLoader: PBResourcesPath is not exists! (%@)", resPath);
         return;
     }
     
@@ -85,12 +88,12 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
 + (void)watchAPI {
     NSString *serverPath = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"PBLocalhost"];
     if (serverPath == nil) {
-        NSLog(@"PBPlayground: Please define PBLocalhost in Info.plist with value '$(SRCROOT)/[path-to-api]'!");
+        NSLog(@"PBLiveLoader: Please define PBLocalhost in Info.plist with value '$(SRCROOT)/[path-to-api]'!");
         return;
     }
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:serverPath]) {
-        NSLog(@"PBPlayground: PBLocalhost is not exists! (%@)", serverPath);
+        NSLog(@"PBLiveLoader: PBLocalhost is not exists! (%@)", serverPath);
         return;
     }
     
@@ -130,6 +133,11 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
             action = [action substringFromIndex:1]; // bypass '/'
         }
         
+        NSString *method = request.method;
+        if (method != nil && ![method isEqualToString:@"GET"]) {
+            action = [action stringByAppendingFormat:@".%@", [method lowercaseString]];
+        }
+        action = [action stringByReplacingOccurrencesOfString:@"/" withString:@"-"];
         if (kIgnoreAPIs != nil && [kIgnoreAPIs containsObject:action]) {
             return nil;
         }
@@ -137,15 +145,39 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
         NSString *jsonName = [NSString stringWithFormat:@"%@/%@.json", [[client class] description], action];
         NSString *jsonPath = [serverPath stringByAppendingPathComponent:jsonName];
         if (![[NSFileManager defaultManager] fileExistsAtPath:jsonPath]) {
-            NSLog(@"PBPlayground: Missing '%@', ignores!", jsonName);
+            NSLog(@"PBLiveLoader: Missing '%@', ignores!", jsonName);
             return nil;
         }
         NSData *jsonData = [NSData dataWithContentsOfFile:jsonPath];
         NSError *error = nil;
-        id response = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+        
+        PBResponse *response = [[PBResponse alloc] init];
+        response.data = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
         if (error != nil) {
-            NSLog(@"PBPlayground: Invalid '%@', ignores!", jsonName);
+            NSLog(@"PBLiveLoader: Invalid '%@', ignores! The file format should be pure JSON style.", jsonName);
             return nil;
+        }
+        
+        if ([response.data isKindOfClass:[NSDictionary class]]) {
+            NSString *redirect = [response.data objectForKey:kDebugJSONRedirectKey];
+            if (redirect != nil) {
+                PBExpression *expression = [PBExpression expressionWithString:redirect];
+                if (expression != nil) {
+                    response.data = [expression valueWithData:nil];
+                }
+            } else {
+                NSString *statusString = [response.data objectForKey:kDebugJSONStatusKey];
+                if (statusString != nil) {
+                    response.status = [statusString intValue];
+                }
+                NSMutableDictionary *filteredDict = [NSMutableDictionary dictionaryWithDictionary:response.data];
+                [filteredDict removeObjectForKey:kDebugJSONStatusKey];
+                if (filteredDict.count == 0) {
+                    response.data = nil;
+                } else {
+                    response.data = filteredDict;
+                }
+            }
         }
         
         return response;
@@ -181,7 +213,6 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
     }
     
     NSArray *changedIgnores;
-    
     if (oldIgnores != nil) {
         NSArray *deletedIgnores = [oldIgnores filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"NOT SELF IN %@", newIgnores]];
         NSArray *addedIgnores = [newIgnores filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"NOT SELF IN %@", oldIgnores]];
