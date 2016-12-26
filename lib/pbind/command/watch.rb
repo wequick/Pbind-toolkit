@@ -53,15 +53,20 @@ module Pbind
       # @return [void]
       #
       def install_sources
-        if File.exists?(@src_install_dir)
-          return
+        source_dir = ENV['PBIND_SOURCE']
+
+        if !File.exists?(@src_install_dir)
+          UI.section("Copying `#{@src_name}` into `#{@project_root}`") do
+            FileUtils.cp_r File.join(source_dir, @src_name), @project_root
+            @changed = true
+          end
         end
 
-        source_dir = ENV['PBIND_SOURCE']
-        UI.section("Copying [`#{@src_name}`, `#{@api_name}`] into `#{@project_root}`.") do
-          FileUtils.cp_r File.join(source_dir, @src_name), @project_root
-          FileUtils.cp_r File.join(source_dir, @api_name), @project_root
-          @changed = true
+        if !File.exists?(@api_install_dir)
+          UI.section("Copying `#{@api_name}` into `#{@project_root}`") do
+            FileUtils.cp_r File.join(source_dir, @api_name), @project_root
+            @changed = true
+          end
         end
       end
 
@@ -100,7 +105,7 @@ module Pbind
           return
         end
 
-        UI.section("Add plist entires to `#{@project_path}`.") do
+        UI.section("Add plist entires to `#{@project_path}`") do
           Xcodeproj::Plist.write_to_path(plist, info_plist_path)
           @changed = true
         end
@@ -148,7 +153,7 @@ module Pbind
           return
         end
 
-        UI.section("Add group [`#{@src_name}`, `#{@api_name}`] to `#{@project_path}`.") do
+        UI.section("Add group [`#{@src_name}`, `#{@api_name}`] to `#{@project_path}`") do
           project.save
           @changed = true
         end

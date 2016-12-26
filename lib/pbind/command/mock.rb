@@ -57,14 +57,16 @@ module Pbind
         group = project.main_group.find_subpath(@api_name, true)
         if group.empty?
           group.clear
-          file_refs = Array.new
-          Dir.foreach(@api_install_dir) do |file|
-            if !File.directory?(file)
-              file_refs << group.new_reference(File.join(@api_install_dir, file))
+          UI.section("Create group \"PBLocalhost\"") do
+            file_refs = Array.new
+            Dir.foreach(@api_install_dir) do |file|
+              if !File.directory?(file)
+                file_refs << group.new_reference(File.join(@api_install_dir, file))
+              end
             end
+            target.add_file_references(file_refs)
+            changed = true
           end
-          target.add_file_references(file_refs)
-          changed = true
         end
 
         # Create directory
@@ -75,29 +77,43 @@ module Pbind
         end
 
         # Create json file
-        json_path = File.join(client_dir, "#{@action}.json")
+        json_name = "#{@action}.json"
+        json_path = File.join(client_dir, json_name)
+        json_relative_path = "PBLocalhost/#{@client}/#{json_name}"
         if !File.exists?(json_path)
-          json_file = File.new(json_path, 'w')
-          json_file.puts("{\n  \n}")
-          changed = true
+          UI.section("Creating file `#{json_relative_path}`") do
+            json_file = File.new(json_path, 'w')
+            json_file.puts("{\n  \n}")
+            changed = true
+          end
         end
 
         # Add json file reference
         group = group.find_subpath(@client, true)
+        added = true
         if group.empty?
           group.clear
+          added = false
+        else
+          found = group.files.index {|x| x.path==json_relative_path}
+          if found == nil
+            added = false
+          end
+        end
+
+        if !added
           file_refs = Array.new
           file_refs << group.new_reference(json_path)
           target.add_file_references(file_refs)
           changed = true
         end
 
-        # Save
         if !changed
           return
         end
 
-        UI.section("Creating PBLocalhost/#{@client}/#{@action}.json.") do
+        # Save
+        UI.section("Adding reference `#{json_relative_path}`") do
           project.save
           @changed = true
         end

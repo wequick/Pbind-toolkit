@@ -1,8 +1,7 @@
 require 'colored'
 require 'claide'
 
-require 'cocoapods/config'
-require 'cocoapods/user_interface'
+require 'pbind/user_interface'
 
 module Pbind
   class Command < CLAide::Command
@@ -15,8 +14,6 @@ module Pbind
     self.version = version
     self.description = 'Pbind, the Pbind XcodeProject Helper.'
     self.plugin_prefixes = %w(claide pbind)
-
-    UI = Pod::UI
 
     def self.report_error(exception)
       case exception
