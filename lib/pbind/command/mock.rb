@@ -27,6 +27,7 @@ module Pbind
       end
 
       def run
+        @action = @action.gsub(/\//, '-')
         @api_name = 'PBLocalhost'
         @project_root = File.dirname(@project_path)
         @api_install_dir = File.absolute_path(File.join(@project_root, @api_name))
