@@ -6,7 +6,7 @@ module Pbind
     class << self
 
       def section(title)
-        message = "%-64s" % "#{title}..."
+        message = "%-64s" % title
         print message.yellow
 
         yield if block_given?

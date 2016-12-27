@@ -82,7 +82,7 @@ module Pbind
         json_path = File.join(client_dir, json_name)
         json_relative_path = "PBLocalhost/#{@client}/#{json_name}"
         if !File.exists?(json_path)
-          UI.section("Creating file `#{json_relative_path}`") do
+          UI.section("Creating file `#{json_name}`") do
             json_file = File.new(json_path, 'w')
             json_file.print("{\n  \n}")
             changed = true
@@ -114,7 +114,7 @@ module Pbind
         end
 
         # Save
-        UI.section("Adding reference `#{json_relative_path}`") do
+        UI.section("Adding reference `#{json_name}`") do
           project.save
           @changed = true
         end
