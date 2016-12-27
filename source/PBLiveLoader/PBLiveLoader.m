@@ -14,9 +14,9 @@
 
 @implementation PBLiveLoader
 
-static NSString *const PLIST_SUFFIX = @".plist";
-static NSString *const JSON_SUFFIX = @".json";
-static NSString *const IGNORES_SUFFIX = @"ignore.h";
+static NSString *const kPlistSuffix = @".plist";
+static NSString *const kJSONSuffix = @".json";
+static NSString *const kIgnoresFile = @"ignore.h";
 
 static NSString *const kDebugJSONRedirectKey = @"$redirect";
 static NSString *const kDebugJSONStatusKey = @"$status";
@@ -61,20 +61,20 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
     [kResWatcher watchDir:resPath handler:^(NSString *path, BOOL initial, PBDirEvent event) {
         switch (event) {
             case PBDirEventNewFile:
-                if (HasSuffix(path, PLIST_SUFFIX)) {
+                if (HasSuffix(path, kPlistSuffix)) {
                     NSBundle *updatedBundle = [NSBundle bundleWithPath:[path stringByDeletingLastPathComponent]];
                     [Pbind addResourcesBundle:updatedBundle];
                 }
                 break;
             
             case PBDirEventModifyFile:
-                if (HasSuffix(path, PLIST_SUFFIX)) {
+                if (HasSuffix(path, kPlistSuffix)) {
                     [Pbind reloadViewsOnPlistUpdate:path];
                 }
                 break;
             
             case PBDirEventDeleteFile:
-                if (HasSuffix(path, PLIST_SUFFIX)) {
+                if (HasSuffix(path, kPlistSuffix)) {
                     [Pbind reloadViewsOnPlistUpdate:path];
                 }
                 break;
@@ -101,23 +101,23 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
     [kAPIWatcher watchDir:serverPath handler:^(NSString *path, BOOL initial, PBDirEvent event) {
         switch (event) {
             case PBDirEventNewFile:
-                if (HasSuffix(path, IGNORES_SUFFIX)) {
+                if (HasSuffix(path, kIgnoresFile)) {
                     kIgnoreAPIs = [self ignoreAPIsWithContentsOfFile:path];
                 }
                 break;
                 
             case PBDirEventModifyFile:
-                if (HasSuffix(path, JSON_SUFFIX)) {
+                if (HasSuffix(path, kJSONSuffix)) {
                     [self reloadViewsOnJSONChange:path deleted:NO];
-                } else if (HasSuffix(path, IGNORES_SUFFIX)) {
+                } else if (HasSuffix(path, kIgnoresFile)) {
                     [self reloadViewsOnIgnoresChange:path deleted:NO];
                 }
                 break;
                 
             case PBDirEventDeleteFile:
-                if (HasSuffix(path, JSON_SUFFIX)) {
+                if (HasSuffix(path, kJSONSuffix)) {
                     [self reloadViewsOnJSONChange:path deleted:YES];
-                } else if (HasSuffix(path, IGNORES_SUFFIX)) {
+                } else if (HasSuffix(path, kIgnoresFile)) {
                     [self reloadViewsOnIgnoresChange:path deleted:YES];
                 }
                 break;
