@@ -2,6 +2,7 @@ require 'colored'
 require 'claide'
 
 require 'pbind/user_interface'
+require 'pbind/gem_version.rb'
 
 module Pbind
   class Command < CLAide::Command
@@ -11,7 +12,7 @@ module Pbind
 
     self.abstract_command = true
     self.command = 'pbind'
-    self.version = version
+    self.version = VERSION
     self.description = 'Pbind, the Pbind XcodeProject Helper.'
     self.plugin_prefixes = %w(claide pbind)
 
