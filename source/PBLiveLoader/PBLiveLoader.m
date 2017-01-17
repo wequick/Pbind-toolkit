@@ -37,10 +37,6 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
 
 + (void)load {
     [super load];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidFinishLaunching:) name:UIApplicationDidFinishLaunchingNotification object:nil];
-}
-
-+ (void)applicationDidFinishLaunching:(id)note {
     [self watchPlist];
     [self watchAPI];
 }
