@@ -18,8 +18,20 @@ FOUNDATION_STATIC_INLINE NSString *PBLLProjectPath() {
 
 FOUNDATION_STATIC_INLINE NSString *PBLLMainBundlePath() {
     NSString *projectPath = PBLLProjectPath();
-    NSString *projectName = [projectPath lastPathComponent];
-    return [projectPath stringByAppendingPathComponent:projectName];
+    NSString *bundlePath = [projectPath stringByAppendingPathComponent:[projectPath lastPathComponent]];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:bundlePath]) {
+        return bundlePath;
+    }
+    
+    NSArray *subdirs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:projectPath error:nil];
+    for (NSString *subdir in subdirs) {
+        bundlePath = [projectPath stringByAppendingPathComponent:subdir];
+        NSString *mainFile = [bundlePath stringByAppendingPathComponent:@"main.m"];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:mainFile]) {
+            return bundlePath;
+        }
+    }
+    return nil;
 }
 
 FOUNDATION_STATIC_INLINE NSString *PBLLMockingAPIPath() {

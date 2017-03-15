@@ -67,7 +67,7 @@ static BOOL HasSuffix(NSString *src, NSString *tail)
 + (void)watchPlist {
 #if (TARGET_IPHONE_SIMULATOR)
     NSString *resPath = PBLLMainBundlePath();
-    if (![[NSFileManager defaultManager] fileExistsAtPath:resPath]) {
+    if (resPath == nil || ![[NSFileManager defaultManager] fileExistsAtPath:resPath]) {
         NSLog(@"PBLiveLoader: PBResourcesPath is not exists! (%@)", resPath);
         return;
     }
