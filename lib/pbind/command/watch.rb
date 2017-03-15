@@ -36,7 +36,7 @@ module Pbind
         @changed = false
 
         install_sources
-        add_plist_entries
+        # add_plist_entries
         add_group_references
 
         super
