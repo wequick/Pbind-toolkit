@@ -12,4 +12,5 @@ Gem::Specification.new do |s|
   s.executables << 'pbind'
   s.add_runtime_dependency 'xcodeproj', '>= 1.3.2', '< 2.0'
   s.add_runtime_dependency 'claide',    '>= 1.0.1', '< 2.0'
+  s.add_runtime_dependency 'listen',    '3.1.5'
 end

@@ -9,6 +9,7 @@ module Pbind
 
     require_relative 'command/watch'
     require_relative 'command/mock'
+    require_relative 'command/serv'
 
     self.abstract_command = true
     self.command = 'pbind'
