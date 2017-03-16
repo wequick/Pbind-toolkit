@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'pbind'
-  s.version     = '0.4.2'
+  s.version     = '0.5.0'
   s.date        = '2016-12-11'
   s.summary     = "Pbind xcodeproj helper"
   s.description = "A toolkit to create a xcode project with Pbind."
