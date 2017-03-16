@@ -70,7 +70,7 @@ module Pbind
             loop do
               line = client.readpartial(1024)
               if line != nil and line.end_with?('.json')
-                send_json(client, line)
+                send_json(@clients, line)
               end
             end
             client.close
@@ -101,15 +101,11 @@ module Pbind
           modified.each { |m|
             if m.end_with?('.plist')
               if @clients != nil
-                @clients.each { |client|
-                  send_plist(client, m)
-                }
+                send_plist @clients, m
               end
             elsif m.end_with?('.json')
               if @clients != nil
-                @clients.each { |client|
-                  send_file_update(client, m, nil)
-                }
+                send_file_update @clients, m, nil
               end
             end
           }
@@ -118,38 +114,41 @@ module Pbind
         @listener.start # not blocking
       end
 
-      def send_json(client, json_file)
+      def send_json(clients, json_file)
         file = File.open(File.join(@api_install_dir, json_file), "r")
         content = file.read
         file.close
 
         UI.section("Send API \"/#{File.basename(json_file, '.json')}\"") {
-          write_byte   client, 0xE0
-          write_string client, content
+          clients.each { |client|
+            write_byte   client, 0xE0
+            write_string client, content
+          }
         }
       end
 
-      def send_plist(client, plist_path)
+      def send_plist(clients, plist_path)
         # Create a binary plist
         require 'tempfile'
         plist_name = File.basename(plist_path)
         temp = Tempfile.new(plist_name)
         `plutil -convert binary1 #{plist_path} -o #{temp.path}`
 
-        # Send plist
-        send_file_update(client, temp.path, plist_name)
+        send_file_update clients, temp.path, plist_name
       end
 
-      def send_file_update(client, file_path, file_name)
+      def send_file_update(clients, file_path, file_name)
         File.open(file_path, "r") { |file|
           file_content = file.read
           if file_name == nil
             file_name = File.basename(file_path)
           end
           UI.section("Update file \"#{file_name}\"") {
-            write_byte(client, 0xF1)
-            write_string(client, file_name)
-            write_string(client, file_content)
+            clients.each { |client|
+              write_byte(client, 0xF1)
+              write_string(client, file_name)
+              write_string(client, file_content)
+            }
           }
         }
       end
