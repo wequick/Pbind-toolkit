@@ -62,34 +62,36 @@ module Pbind
 
         addr = server.addr
         addr.shift
-        puts "server is on #{addr.join(':')}"
+        puts "#{'Pbind server is on'.bold} #{local_ip.underline}"
 
         loop do
           Thread.start(server.accept) do |client|
             @clients.push client
             loop do
-              line = client.readpartial(1024)
-              if line != nil and line.end_with?('.json')
-                send_json(@clients, line)
+              req = client.readpartial(1024)
+              if req != nil
+                handle_request(client, req)
               end
             end
             client.close
           end
         end
+      end
 
-        # loop do
-        #   client = server.accept    # Wait for a client to connect
-        #   @client = client
+      def handle_request(client, req)
+        if req.start_with?('[C]')
+          puts "client #{req[3..-1].green} connected"
+        elsif req.end_with?('.json')
+          send_json([client], req)
+        end
+      end
 
-        #   line = client.readpartial(1024)
-        #   puts "get #{line}"
-        #   if line != nil and line.end_with?('.json')
-        #     puts "send #{line}"
-        #     send_json(client, line)
-        #   end
-
-        #   client.close
-        # end
+      def local_ip
+        addr_infos = Socket.ip_address_list
+        local_addr_info = addr_infos.select { |info|
+          info.ipv4? and info.ip_address != '127.0.0.1'
+        }
+        local_addr_info[0].ip_address
       end
 
       def listen_file_changes
