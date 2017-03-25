@@ -7,7 +7,7 @@
 
 #import "PBLLInspector.h"
 
-#if (DEBUG && !(TARGET_IPHONE_SIMULATOR))
+#if (PBLIVE_ENABLED && !(TARGET_IPHONE_SIMULATOR))
 
 #import "PBLLInspectorController.h"
 #import <Pbind/Pbind.h>

@@ -6,10 +6,10 @@
 //
 
 #import "PBLiveLoader.h"
+
+#if (PBLIVE_ENABLED)
+
 #include <targetconditionals.h>
-
-#if (DEBUG)
-
 #import "PBDirectoryWatcher.h"
 #import <Pbind/Pbind.h>
 

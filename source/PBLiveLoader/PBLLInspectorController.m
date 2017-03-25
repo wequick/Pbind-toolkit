@@ -7,7 +7,7 @@
 
 #import "PBLLInspectorController.h"
 
-#if (DEBUG && !(TARGET_IPHONE_SIMULATOR))
+#if (PBLIVE_ENABLED && !(TARGET_IPHONE_SIMULATOR))
 
 #import "PBLLInspector.h"
 #import "PBLLRemoteWatcher.h"

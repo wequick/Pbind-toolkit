@@ -8,7 +8,7 @@
 
 #import "NSInputStream+Reader.h"
 
-#if (DEBUG && !(TARGET_IPHONE_SIMULATOR))
+#if (PBLIVE_ENABLED && !(TARGET_IPHONE_SIMULATOR))
 
 @implementation NSInputStream (Reader)
 
