@@ -7,9 +7,10 @@
 
 #import "PBLLRemoteWatcher.h"
 
-#if (DEBUG && !(TARGET_IPHONE_SIMULATOR))
+#if (PBLIVE_ENABLED && !(TARGET_IPHONE_SIMULATOR))
 
 #import "NSInputStream+Reader.h"
+#import <UIKit/UIKit.h>
 
 @interface PBLLRemoteWatcher () <NSStreamDelegate>
 {
@@ -95,11 +96,20 @@
     NSLog(@"socket: %i, %@", (int)eventCode, aStream);
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
-            
             break;
         case NSStreamEventHasSpaceAvailable:
             if (aStream == outputStream) {
-                streamOpened = YES;
+                if (!streamOpened) {
+                    streamOpened = YES;
+                    
+                    // Send connected message
+                    NSString *osModel = [[UIDevice currentDevice] name];
+                    NSString *osVersion = [[UIDevice currentDevice] systemVersion];
+                    NSString *msg = [NSString stringWithFormat:@"[C]%@(%@)", osModel, osVersion];
+                    NSData *msgData = [msg dataUsingEncoding:NSUTF8StringEncoding];
+                    [outputStream write:[msgData bytes] maxLength:[msgData length]];
+                }
+                
                 if (apiReqData != nil) {
                     [outputStream write:[apiReqData bytes] maxLength:[apiReqData length]];
                     apiReqData = nil;
