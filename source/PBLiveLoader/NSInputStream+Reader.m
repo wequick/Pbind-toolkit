@@ -21,8 +21,18 @@
 
 - (NSData *)readData {
     int length = [self readInt];
+    if (length < 0) {
+        return nil;
+    }
     uint8_t *bytes = malloc(length);
     NSInteger len = [self read:bytes maxLength:length];
+    while (len < length) {
+        len += [self read:bytes + len maxLength:length - len];
+    }
+    if (len != length) {
+        NSLog(@"Failed to read data in length %i, only got %i bytes", length, (int)len);
+        return nil;
+    }
     return [NSData dataWithBytes:bytes length:len];
 }
 

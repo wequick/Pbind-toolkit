@@ -24,6 +24,8 @@
 - (void)remoteWatcher:(PBLLRemoteWatcher *)watcher didCreateFile:(NSString *)fileName;
 - (void)remoteWatcher:(PBLLRemoteWatcher *)watcher didDeleteFile:(NSString *)fileName;
 
+- (void)remoteWatcher:(PBLLRemoteWatcher *)watcher didChangeConnectState:(BOOL)connected;
+
 @end
 
 @interface PBLLRemoteWatcher : NSObject
@@ -35,7 +37,11 @@
 
 - (void)requestAPI:(NSString *)api success:(void (^)(NSData *))success failure:(void (^)(NSError *))failure;
 
+- (void)sendLog:(NSString *)log;
+
 @property (nonatomic, assign) id<PBLLRemoteWatcherDelegate> delegate;
+
+@property (nonatomic, strong, readonly) NSString *defaultIP;
 
 @end
 

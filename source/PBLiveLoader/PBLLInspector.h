@@ -9,7 +9,7 @@
 #import "PBLLOptions.h"
 #include <targetconditionals.h>
 
-#if (PBLIVE_ENABLED && !(TARGET_IPHONE_SIMULATOR))
+#if (PBLIVE_ENABLED)
 
 #import <UIKit/UIKit.h>
 
@@ -17,7 +17,7 @@
 
 + (instancetype)sharedInspector;
 
-+ (void)addToWindow;
+- (void)updateConnectState:(BOOL)connected;
 
 @end
 
