@@ -27,6 +27,7 @@ module Pbind
         @project_root = File.dirname(@project_path)
         @src_install_dir = File.absolute_path(File.join(@project_root, @src_name))
         @api_install_dir = File.absolute_path(File.join(@project_root, @api_name))
+        @api_ignores_file = File.absolute_path(File.join(@api_install_dir, 'ignore.h'))
         @project = Xcodeproj::Project.open(@project_path)
         @changed = false
 
@@ -59,6 +60,7 @@ module Pbind
         server = TCPServer.new 8082 # Server bind to port
         @server = server
         @clients = []
+        @client_names = Hash.new
 
         addr = server.addr
         addr.shift
@@ -79,10 +81,24 @@ module Pbind
       end
 
       def handle_request(client, req)
-        if req.start_with?('[C]')
-          puts "client #{req[3..-1].green} connected"
-        elsif req.end_with?('.json')
-          send_json([client], req)
+        type = req.bytes[0]
+        msg = req[1..-1]
+
+        if type == 0xC0
+          # Connected
+          @client_names[client] = msg
+          print_client_msg(client, "Connected")
+        elsif type == 0xC1
+          # Request API
+          print_client_msg(client, "Request API '#{msg}'")
+          send_json([client], msg)
+        elsif type == 0xC2
+          # Log
+          print_client_msg(client, msg)
+        elsif type == 0xF1
+          print_client_msg(client, "Apply changed '#{msg}'")
+        elsif type == 0xD0
+          print_client_msg(client, "Got response '#{msg}'")
         end
       end
 
@@ -116,16 +132,38 @@ module Pbind
         @listener.start # not blocking
       end
 
-      def send_json(clients, json_file)
+      def send_json(clients, api)
+        # Check if ignores
+        file = File.open(@api_ignores_file, "r")
+        file.each_line { |line|
+          if line.start_with? '//'
+            next
+          end
+
+          ignore = line.chomp
+          if ignore.include? api
+            print_serv_msg "Ignores API '#{api}'"
+            clients.each { |client|
+              write_byte  client, 0xE0
+            }
+            return
+          end
+        }
+
+        # Read content and minify
+        json_file = "#{api}.json"
         file = File.open(File.join(@api_install_dir, json_file), "r")
         content = file.read
         file.close
 
-        UI.section("Send API \"/#{File.basename(json_file, '.json')}\"") {
-          clients.each { |client|
-            write_byte   client, 0xE0
-            write_string client, content
-          }
+        content = Minify.json(content)
+
+        # Send content
+        print_serv_msg("Send API '#{api}'")
+        clients.each { |client|
+          write_byte   client, 0xD0
+          write_string client, api
+          write_string client, content
         }
       end
 
@@ -145,12 +183,12 @@ module Pbind
           if file_name == nil
             file_name = File.basename(file_path)
           end
-          UI.section("Update file \"#{file_name}\"") {
-            clients.each { |client|
-              write_byte(client, 0xF1)
-              write_string(client, file_name)
-              write_string(client, file_content)
-            }
+
+          print_serv_msg("Update file \"#{file_name}\"")
+          clients.each { |client|
+            write_byte(client, 0xF1)
+            write_string(client, file_name)
+            write_string(client, file_content)
           }
         }
       end
@@ -170,6 +208,30 @@ module Pbind
         rescue Exception => e
           @clients.delete client
         end
+      end
+
+      def print_serv_msg(msg)
+        print_time
+        print "[Pbind] ".yellow
+        puts msg
+      end
+
+      def print_client_msg(client, msg)
+        print_time
+        device = @client_names[client]
+        if (device == nil)
+          device = "unknown"
+        end
+        print "[#{device}] ".green
+        puts msg
+      end
+
+      def print_time
+        t = Time.now
+        print t.strftime("%H:%M:%S")
+        print '.'
+        print '%03d' % ((t.to_f * 1000).to_i % 1000) # ms
+        print ' '
       end
 
     end

@@ -1,6 +1,7 @@
 require 'colored'
 require 'claide'
 
+require 'pbind/minify'
 require 'pbind/user_interface'
 require 'pbind/gem_version.rb'
 
@@ -10,6 +11,7 @@ module Pbind
     require_relative 'command/watch'
     require_relative 'command/mock'
     require_relative 'command/serv'
+    require_relative 'command/view'
 
     self.abstract_command = true
     self.command = 'pbind'
