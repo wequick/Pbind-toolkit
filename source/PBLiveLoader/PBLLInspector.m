@@ -76,6 +76,10 @@ static inline void pbll_swizzleSelector(Class class, SEL originalSelector, SEL s
 - (void)pbll_viewDidAppear:(BOOL)animated {
     [self pbll_viewDidAppear:animated];
     
+    if ([self isKindOfClass:[UINavigationController class]] || [self isKindOfClass:[PBLLInspectorController class]]) {
+        return;
+    }
+    
     UIView *plistView = [self pbll_findPlistView:self.view];
     if (plistView == nil) {
         return;
