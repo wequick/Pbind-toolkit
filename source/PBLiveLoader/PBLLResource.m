@@ -13,6 +13,14 @@
 
 @implementation PBLLResource
 
++ (NSString *)pbindTitle {
+    return @"Pbind";
+}
+
++ (UIColor *)pbindColor {
+    return PBColorMake(@"5D74E9");
+}
+
 + (UIImage *)imageWithWidth:(CGFloat)width height:(CGFloat)height draw:(dispatch_block_t)drawBlock {
     CGRect imageRect = CGRectMake(0.0, 0.0, width, height);
     UIGraphicsBeginImageContextWithOptions(imageRect.size, NO, [UIScreen mainScreen].scale);
@@ -30,7 +38,6 @@
     dispatch_once(&onceToken, ^{
         image = [self imageWithWidth:32.f height:32.f draw:^{
             //// Color Declarations
-//            UIColor* fillColor3 = PBColorMake(@"5D74E9");//[UIColor whiteColor];
             //// General Declarations
             CGContextRef context = UIGraphicsGetCurrentContext();
             

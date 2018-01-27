@@ -11,12 +11,14 @@
 #if (PBLIVE_ENABLED)
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 @interface PBLLResource : NSObject
 
-+ (UIImage *)logoImage;
-
-+ (UIImage *)copyImage;
+@property (nonatomic, strong, class, readonly) UIImage *logoImage;
+@property (nonatomic, strong, class, readonly) UIImage *copyImage;
+@property (nonatomic, strong, class, readonly) NSString *pbindTitle;
+@property (nonatomic, strong, class, readonly) UIColor *pbindColor;
 
 @end
 

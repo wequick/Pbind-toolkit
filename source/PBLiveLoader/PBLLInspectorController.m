@@ -11,7 +11,20 @@
 
 #import "PBLLInspector.h"
 #import "PBLLRemoteWatcher.h"
+#import "PBLLResource.h"
 #import <Pbind/Pbind.h>
+
+@interface _PBLLWrapperNavigationController : UINavigationController
+
+@end
+
+@implementation _PBLLWrapperNavigationController
+
+- (UIStatusBarStyle)preferredStatusBarStyle {
+    return UIStatusBarStyleLightContent;
+}
+
+@end
 
 @interface PBLLInspectorController () <UISearchBarDelegate>
 {
@@ -25,12 +38,12 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    self.title = @"Pbind";
-    UIColor *primaryColor = PBColorMake(@"5D74E9");
+    self.title = [PBLLResource pbindTitle];
+    UIColor *primaryColor = [PBLLResource pbindColor];
     UINavigationBar *navigationBar = self.navigationController.navigationBar;
     [navigationBar setBarTintColor:primaryColor];
     [navigationBar setTintColor:[UIColor whiteColor]];
-    [navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+    [navigationBar setBackgroundImage:[UIImage new] forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
     [navigationBar setShadowImage:[UIImage new]];
     [navigationBar setTranslucent:NO];
     [navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor]}];
@@ -73,6 +86,12 @@
     
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTap:)];
     [self.view addGestureRecognizer:tap];
+}
+
++ (void)presentFromViewController:(UIViewController *)viewController {
+    PBLLInspectorController *inspectorVC = [[PBLLInspectorController alloc] init];
+    UINavigationController *nav = [[_PBLLWrapperNavigationController alloc] initWithRootViewController:inspectorVC];
+    [viewController presentViewController:nav animated:YES completion:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated {

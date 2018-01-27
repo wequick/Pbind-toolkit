@@ -15,6 +15,8 @@
 
 @interface PBLLInspectorController : UIViewController
 
++ (void)presentFromViewController:(UIViewController *)viewController;
+
 @end
 
 #endif

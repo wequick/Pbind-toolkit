@@ -13,6 +13,7 @@
 #import "PBLLInspectorTipsController.h"
 #import "PBLLResource.h"
 #import <Pbind/Pbind.h>
+#import <objc/runtime.h>
 
 @interface PBLLTipsTapper : UITapGestureRecognizer
 
@@ -49,11 +50,57 @@
     NSString *_identifier;
 }
 
++ (void)showInspectorForView:(UIView *)view;
+
+@end
+
+@implementation UIViewController (PBLLInspector)
+
+static inline void pbll_swizzleSelector(Class class, SEL originalSelector, SEL swizzledSelector) {
+    Method originalMethod = class_getInstanceMethod(class, originalSelector);
+    Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+    if (class_addMethod(class, originalSelector, method_getImplementation(swizzledMethod), method_getTypeEncoding(swizzledMethod))) {
+        class_replaceMethod(class, swizzledSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod));
+    } else {
+        method_exchangeImplementations(originalMethod, swizzledMethod);
+    }
+}
+
++ (void)load {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        pbll_swizzleSelector([UIViewController class], @selector(viewDidAppear:), @selector(pbll_viewDidAppear:));
+    });
+}
+
+- (void)pbll_viewDidAppear:(BOOL)animated {
+    [self pbll_viewDidAppear:animated];
+    
+    UIView *plistView = [self pbll_findPlistView:self.view];
+    if (plistView == nil) {
+        return;
+    }
+    [PBLLInspector showInspectorForView:plistView];
+}
+
+- (UIView *)pbll_findPlistView:(UIView *)view {
+    if (view.plist != nil) {
+        return view;
+    }
+    
+    UIView *plistView = nil;
+    for (UIView *subview in view.subviews) {
+        plistView = [self pbll_findPlistView:subview];
+        if (plistView != nil) {
+            break;
+        }
+    }
+    return plistView;
+}
+
 @end
 
 @implementation PBLLInspector
-
-#define kPbindPrimaryColor PBColorMake(@"5D74E9")
 
 static const CGFloat kWidth = 44.f;
 static const CGFloat kHeight = 44.f;
@@ -61,7 +108,6 @@ static const CGFloat kHeight = 44.f;
 static BOOL kDisplaysExpression = NO;
 
 + (void)load {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pbviewDidStartLoad:) name:PBViewDidStartLoadNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pbactionWillDispatch:) name:PBActionStoreWillDispatchActionNotification object:nil];
     [Pbind registerViewValueSetter:^id(UIView *view, NSString *keyPath, id value, BOOL *canceld, UIView *contextView, NSString *contextKeyPath) {
         if (!kDisplaysExpression) {
@@ -94,7 +140,7 @@ static BOOL kDisplaysExpression = NO;
                 CGRect bounds = (CGRect){.origin = CGPointZero, .size = viewSize};
                 if (imageBgInspectorLayer == nil) {
                     imageBgInspectorLayer = [[CALayer alloc] init];
-                    imageBgInspectorLayer.backgroundColor = [kPbindPrimaryColor colorWithAlphaComponent:.5f].CGColor;
+                    imageBgInspectorLayer.backgroundColor = [[PBLLResource pbindColor] colorWithAlphaComponent:.5f].CGColor;
                     imageBgInspectorLayer.bounds = bounds;
                     imageBgInspectorLayer.position = CGPointZero;
                     imageBgInspectorLayer.anchorPoint = CGPointZero;
@@ -255,9 +301,7 @@ static BOOL kDisplaysExpression = NO;
         return;
     }
     
-    PBLLInspectorController *inspectorVC = [[PBLLInspectorController alloc] init];
-    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:inspectorVC];
-    [currentController presentViewController:nav animated:YES completion:nil];
+    [PBLLInspectorController presentFromViewController:currentController];
 }
 #endif
 
@@ -272,11 +316,15 @@ static BOOL kDisplaysExpression = NO;
 #pragma mark - Notification
 
 - (void)updateConnectState:(BOOL)connected {
-    self.backgroundColor = connected ? kPbindPrimaryColor : [UIColor lightGrayColor];
+    self.backgroundColor = connected ? [PBLLResource pbindColor] : [UIColor lightGrayColor];
 }
 
 + (void)pbviewDidStartLoad:(NSNotification *)notification {
     UIView *view = notification.object;
+    [self showInspectorForView:view];
+}
+
++ (void)showInspectorForView:(UIView *)view {
     NSString *plist = view.plist;
     if (plist == nil) {
         return;
@@ -338,7 +386,7 @@ static BOOL kDisplaysExpression = NO;
         popContainerVC = popVC.popoverPresentationController;
         popContainerVC.permittedArrowDirections = UIPopoverArrowDirectionAny;
         popContainerVC.delegate = self;
-        popContainerVC.backgroundColor = kPbindPrimaryColor;
+        popContainerVC.backgroundColor = [PBLLResource pbindColor];
         popContainerVC.passthroughViews = @[curVC.view];
         
         popVC.tips = tips;
