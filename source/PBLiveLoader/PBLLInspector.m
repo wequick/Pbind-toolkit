@@ -303,7 +303,7 @@ static BOOL kDisplaysExpression = NO;
     NSMutableDictionary *temp = [NSMutableDictionary dictionary];
     PBActionState *state = action.store.state;
     [action.mapper initPropertiesForTarget:temp];
-    [action.mapper mapPropertiesToTarget:temp withData:state.data owner:state.context context:state.context];
+    [action.mapper mapPropertiesToTarget:temp withData:state.data owner:state.sender context:state.context];
     NSString *tips = [temp description];
     
     // Build up code (expression)
